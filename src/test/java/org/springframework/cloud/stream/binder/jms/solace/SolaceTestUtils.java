@@ -19,13 +19,16 @@ package org.springframework.cloud.stream.binder.jms.solace;
 import com.solacesystems.jcsmp.*;
 import com.solacesystems.jcsmp.impl.XMLContentMessageImpl;
 import com.solacesystems.jcsmp.transaction.TransactedSession;
+import com.solacesystems.jms.SolConnectionFactoryImpl;
 import com.solacesystems.jms.SolJmsUtility;
 import org.springframework.beans.factory.config.YamlMapFactoryBean;
 import org.springframework.cloud.stream.binder.jms.solace.config.SolaceConfigurationProperties;
 import org.springframework.core.io.ClassPathResource;
 
+import com.solacesystems.jms.property.JMSProperties;
 import javax.jms.ConnectionFactory;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -66,14 +69,15 @@ public class SolaceTestUtils {
 
     public static ConnectionFactory createConnectionFactory() throws Exception {
         SolaceConfigurationProperties solaceProperties = getSolaceProperties();
-        ConnectionFactory cf = SolJmsUtility.createConnectionFactory(
-                solaceProperties.getHost(),
-                solaceProperties.getUsername(),
-                solaceProperties.getPassword(),
-                null,
-                null
-                );
-        return cf;
+        JMSProperties properties = new JMSProperties((Hashtable<?, ?>) null);
+        SolConnectionFactoryImpl solConnectionFactory = new SolConnectionFactoryImpl(properties);
+        solConnectionFactory.setProperty("Host", solaceProperties.getHost());
+        solConnectionFactory.setProperty("Username", solaceProperties.getUsername());
+        solConnectionFactory.setProperty("Password", solaceProperties.getPassword());
+        //Disabling direct transport allows JMS to use transacted sessions. Enabling at the same time
+        //DLQ routing if maxRedeliveryAttempts is set
+        solConnectionFactory.setDirectTransport(false);
+        return solConnectionFactory;
     }
 
     public static JCSMPSession createSession() {
