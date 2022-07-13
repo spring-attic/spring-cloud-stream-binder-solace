@@ -1,3 +1,6 @@
+# spring-cloud-stream-binder-solace is no longer actively maintained by VMware, Inc.
+
+
 Spring Cloud Stream JMS Binder – Solace Support
 -----------------------------------------------
 
